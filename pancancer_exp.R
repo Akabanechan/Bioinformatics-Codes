@@ -1,5 +1,7 @@
 library(data.table)
-library('ggplot2')
+library(ggplot2)
+library(tidyverse)
+library(rstatix)
 workdir = 'D:/Download/GEO analysis/新建文件夹'
 setwd(workdir)
 
@@ -45,12 +47,43 @@ for (i in 1:nrow(melter)){
 }
 
 
+#筛选健康与癌症都有的部位
+a = unique(melter[,'organ'])
+for (i in unique(melter[,'organ'])){
+  if (length(unique(melter[melter[,'organ']==i,'group'])) == 1){
+    a = a[-which(a==i)]
+  }
+}
 
+melter = melter[which(melter[,'organ'] %in% a),]
+
+
+#计算组内p值
+melter$organ <- factor(melter$organ)
+
+melt_p_val1 <- melter %>% 
+  group_by(organ) %>% 
+  wilcox_test(formula  = expr ~ group) %>% 
+  add_significance(p.col = 'p',cutpoints = c(0,0.001,0.01,0.05,1),symbols = c('***','**','*','ns')) %>% 
+  add_xy_position(x='organ')
+
+
+#绘图
 pdf(file=paste(workdir,"/","表达谱.pdf",sep=""), width=24, height=18, onefile = FALSE)
 ggplot(melter)+
   geom_boxplot(aes(organ,expr,fill = group))+
   scale_fill_manual(values = c('Tumor' = '#d6503a','Normal' = '#5488ef'))+
+  stat_pvalue_manual(melt_p_val1,label = '{p.signif}',tip.length = 0)+
+  labs(x='Organ',y='Expr',
+       caption = "Visualization by <span style='color:#DD6449'>gtrobot</span>")+
+  guides(fill=guide_legend(title = 'Cancer'))+
   theme_bw()+
   theme(axis.text = element_text(face = 'bold'),
-        axis.text.x = element_text(angle = 45,hjust = 1))
+        axis.text.x = element_text(angle = 45,hjust = 1),
+        legend.position = c(0.7,0.1),
+        legend.direction = 'horizontal')
+  #scale_y_continuous(limits = c(0,20),breaks = seq(0,20,5),expand = c(0,0))
 dev.off()
+
+
+
