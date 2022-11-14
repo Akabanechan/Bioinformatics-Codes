@@ -82,7 +82,7 @@ ggplot(melter)+
         axis.text.x = element_text(angle = 45,hjust = 1),
         legend.position = c(0.7,0.1),
         legend.direction = 'horizontal')
-  #scale_y_continuous(limits = c(0,20),breaks = seq(0,20,5),expand = c(0,0))
+  #scale_y_continuous(limits = c(0,20),breaks = seq(0,20,5),expand = c(0,0))#设定y轴标度
 dev.off()
 
 

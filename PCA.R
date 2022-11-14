@@ -55,10 +55,7 @@ colnames(expdata)[1] = 'group'
 pca1 <- prcomp(expdata[,2:ncol(expdata)],center = TRUE,scale. = TRUE)
 
 print(str(pca1))
-#iris_input <- iris # 使用R自带iris数据集（150*5，行为样本，列为特征）
-#rownames(iris_input) <- paste("sample",1:nrow(iris_input),sep = "") 
 
-#pca1 <- prcomp(iris_input[,-ncol(iris_input)],center = TRUE,scale. = TRUE)
 
 df1 <- pca1$x # 提取PC score
 df1 <- as.data.frame(df1) # 注意：如果不转成数据框形式后续绘图时会报错

@@ -1,9 +1,11 @@
 library(ggplot2)
 library(ggpubr)
+library(tidyverse)
+library(rstatix)
 
 #exp_file = "D:/Download/GEO analysis/20221101/download/gene_count_matrix.csv"
 expr_file = "D:/Download/GEO analysis/20221101/download/genes.TPM_Cross.matrix"
-trait_file = "D:/Download/GEO analysis/20221101/WGCNA/trait.txt"
+#trait_file = "D:/Download/GEO analysis/20221101/WGCNA/trait.txt"
 Compare = "D:/Download/GEO analysis/20221101/DEG/group_file.txt"
 workdir = 'D:/Download/GEO analysis/20221101/DEG'
 setwd(workdir)
@@ -60,6 +62,7 @@ for (i in 1:10){
 }
 colnames(expdata)[3] = 'pair'
 
+#expdata$group <- factor(expdata$group)
 
 #使用 ggplot2 包绘制箱线图
 p <- ggplot(expdata, aes(x = group, y = expr)) +
@@ -68,12 +71,14 @@ p <- ggplot(expdata, aes(x = group, y = expr)) +
   geom_point(size = 2) +  #绘制样本点
   geom_line(aes(group = pair), color = 'gray', lwd = 0.5) +  #绘制配对样本间连线
   ##以下是ggplot2的主题设置，修改边框、背景、标题、字体等
-  theme(panel.grid = element_blank(), axis.line = element_line(colour = 'black', size = 1), panel.background = element_blank(), 
+  theme(panel.grid = element_blank(), axis.line = element_line(colour = 'black', linewidth = 1), panel.background = element_blank(), 
         plot.title = element_text(size = 20, hjust = 0.5), plot.subtitle = element_text(size = 15, hjust = 0.5), 
         axis.text = element_text(size = 20, color = 'black'), axis.title = element_text(size = 20, color = 'black')) +
   labs(x = '', y = 'log2(count+1)', title = '', subtitle = 'mv_12h vs mv_6h')
 
+my_compare = list(c('mv12h','mv6h'))
+p + stat_compare_means(comparisons = my_compare,
+                       label = 'p.signif',
+                       method = 't.test')
+
 p
-
-
-
