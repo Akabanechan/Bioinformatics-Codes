@@ -46,15 +46,17 @@ for (i in 1:nrow(group)){
 
 group[1:10,1] = substr(group[1:10,1],1,5)
 group[11:20,1] = substr(group[11:20,1],1,4)
-#group[21:30,1] = substr(group[21:30,1],1,7)
+group[21:25,1] = paste(substr(group[21:25,1],1,7),substr(group[21:25,1],9,10),sep = '')
+group[26:30,1] = paste(substr(group[26:30,1],1,7),substr(group[26:30,1],9,11),sep = '')
 #group = group[1:20,]
 
 #组合
 expdata = data.frame(group[,1],data[match(rownames(group),rownames(data)),])
 colnames(expdata)[1] = 'group'
 
-expdata = expdata[1:20,1:2]
-colnames(expdata)[2] = 'expr'
+expdata = expdata[,c('group','Ppargc1a')]
+#expdata = expdata[,1:2]
+
 
 for (i in 1:10){
   expdata[i,3] = i
@@ -62,23 +64,28 @@ for (i in 1:10){
 }
 colnames(expdata)[3] = 'pair'
 
-#expdata$group <- factor(expdata$group)
 
 #使用 ggplot2 包绘制箱线图
-p <- ggplot(expdata, aes(x = group, y = expr)) +
+
+p <- ggplot(expdata, aes(x = group, y = Ppargc1a)) +
   geom_boxplot(aes(fill = group), show.legend = FALSE, width = 0.6) +  #绘制箱线图
-  scale_fill_manual(values = c('#FE7280', '#AC88FF')) +  #箱线图的填充色
+  #scale_fill_manual(values = c('#FE7280', '#AC88FF')) +  #箱线图的填充色
   geom_point(size = 2) +  #绘制样本点
-  geom_line(aes(group = pair), color = 'gray', lwd = 0.5) +  #绘制配对样本间连线
+  #geom_line(aes(group = pair), color = 'gray', lwd = 0.5) +  #绘制配对样本间连线
   ##以下是ggplot2的主题设置，修改边框、背景、标题、字体等
   theme(panel.grid = element_blank(), axis.line = element_line(colour = 'black', linewidth = 1), panel.background = element_blank(), 
         plot.title = element_text(size = 20, hjust = 0.5), plot.subtitle = element_text(size = 15, hjust = 0.5), 
-        axis.text = element_text(size = 20, color = 'black'), axis.title = element_text(size = 20, color = 'black')) +
-  labs(x = '', y = 'log2(count+1)', title = '', subtitle = 'mv_12h vs mv_6h')
+        axis.text = element_text(size = 20, color = 'black'), axis.title = element_text(size = 20, color = 'black'),
+        plot.margin = unit(c(0.4,0.4,0.4,0.4),'cm')) +
+  labs(x = '', y = 'log2(count+1)', title = '', subtitle = 'Ppargc1a')
 
-my_compare = list(c('mv12h','mv6h'))
-p + stat_compare_means(comparisons = my_compare,
+my_compare = list(c('mv12h','mv6h'),c('mv6h','control6h'),c('mv12h','control12h'),c('control6h','control12h'))
+p2 = p + stat_compare_means(comparisons = my_compare,
                        label = 'p.signif',
-                       method = 't.test')
+                       method = 'wilcox.test')
 
-p
+#ggsave(p,filename = "paired.pdf")
+
+pdf(file=paste(workdir,"/","Ppargc1a_compare.pdf",sep=""), width=12, height=10)
+print(p2)
+dev.off()
