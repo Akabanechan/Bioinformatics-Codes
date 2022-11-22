@@ -1,6 +1,7 @@
 rm(list = ls())  ## 魔幻操作，一键清空~
 
 exp_file = 'D:/Download/GEO analysis/20221101/download/gene_count_matrix.csv'
+exp_file = 'D:/Download/GEO analysis/20221101/DEG/gene_trans.csv'
 Compare = "D:/Download/GEO analysis/20221101/DEG/group_file.txt"
 workdir = 'D:/Download/GEO analysis/20221101/DEG'
 setwd(workdir)
@@ -9,6 +10,7 @@ setwd(workdir)
 count <- read.csv(exp_file, header = T, row.names = 1,check.names = F)
 #过滤掉低表达的基因
 Expr <- count[rowSums(count)>1,]
+Expr = data.frame(t(count))
 Expr = data.frame(t(data))
 ##载入样品信息，含批次
 batch <- read.table(Compare, row.names=1, header=T, comment.char = "", check.names=F)
@@ -59,7 +61,7 @@ fviz_pca_ind(af2.pca,
 design <- model.matrix(~group,data = batch)
 
 library(sva)
-combat_Expr <- ComBat(dat = Expr,batch = batch$batch, mod = design)
+combat_Expr <- ComBat_seq(as.matrix(Expr),batch = batch$batch)
 ##combat_Expr就是校正后的数据
 ######################################
 #差异分析
@@ -73,8 +75,10 @@ library(FactoMineR)
 af1.pca <- PCA(t(combat_Expr),graph = FALSE)
 fviz_pca_ind(af1.pca,
              geom= "point",
-             col.ind = data$batch,
+             col.ind = batch$batch,
+             habillage=batch$batch,
+             palette = "Dark2",
              addEllipses = TRUE,
              legend.title="Group" )
-​
 
+write.csv(combat_Expr, file = 'gene_sva.csv', quote=F, row.names = T)
