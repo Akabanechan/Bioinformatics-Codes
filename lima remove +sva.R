@@ -11,7 +11,7 @@ count <- read.csv(exp_file, header = T, row.names = 1,check.names = F)
 #过滤掉低表达的基因
 Expr <- count[rowSums(count)>1,]
 Expr = data.frame(t(count))
-Expr = data.frame(t(data))
+
 ##载入样品信息，含批次
 batch <- read.table(Compare, row.names=1, header=T, comment.char = "", check.names=F)
 batch = group
@@ -34,7 +34,7 @@ fviz_pca_ind(pre.pca,
              palette = "Dark2",
              addEllipses = TRUE,
              legend.title="Group")
-#fviz_pca_ind(pre.pca)
+
 ##limma包自带的removeBatchEffect函数 消除批次效应
 library(limma)
 design <- model.matrix(~group,data = batch)

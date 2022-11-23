@@ -1,11 +1,9 @@
 library(ggplot2)
 library(ggpubr)
-library(tidyverse)
-library(rstatix)
 
 #exp_file = "D:/Download/GEO analysis/20221101/download/gene_count_matrix.csv"
 expr_file = "D:/Download/GEO analysis/20221101/download/genes.TPM_Cross.matrix"
-#trait_file = "D:/Download/GEO analysis/20221101/WGCNA/trait.txt"
+exp_file = "D:/Download/GEO analysis/20221101/DEG/gene_sva.csv"
 Compare = "D:/Download/GEO analysis/20221101/DEG/group_file.txt"
 workdir = 'D:/Download/GEO analysis/20221101/DEG'
 setwd(workdir)
@@ -13,21 +11,25 @@ setwd(workdir)
 #读入表型文件
 
 datExpr = read.table(expr_file,header=T,row.names=1,stringsAsFactors = F,comment.char = "",check.names=F)
-#datExpr = read.csv(exp_file, header = T, row.names = 1,check.names = F)
+datExpr = read.csv(exp_file, header = T, row.names = 1,check.names = F)
 datExpr <- datExpr[rowSums(datExpr)>0,]
 datExpr <- datExpr[apply(datExpr, 1, var)!=0,]
 
+#筛选差异前75%基因
 m.mad <- apply(datExpr,1,mad)
-# dataVar <- data[which(m.mad > max(quantile(m.mad, probs=seq(0, 1, 0.25))[2],0.01)),]
-# dataVar <- data[which(m.mad > 0),]
-# data <- as.data.frame(t(dataVar))
-
+dataVar <- datExpr[which(m.mad > max(quantile(m.mad, probs=seq(0, 1, 0.25))[2],0.01)),]
+dataVar <- datExpr[which(m.mad > 0),]
+data <- as.data.frame(t(dataVar))
+#筛选前500基因
 datExpr2 = datExpr[rev(order(m.mad)),]
 datExpr = datExpr2[1:500,]
+#不筛选
 data = data.frame(t(datExpr))
 
+#标准化
 data = log2(data+1)
 
+#修正样本名
 for (i in 1:nrow(data)){
   rownames(data)[i] = substr(rownames(data)[i],1,nchar(rownames(data)[i])-6)
 }
@@ -41,28 +43,23 @@ for (i in 1:nrow(group)){
 }
 
 #筛选
-#group[,2] = grepl(pattern = '6h',rownames(group))
-#group = group[group[,2]==TRUE,1]
-
 group[1:10,1] = substr(group[1:10,1],1,5)
 group[11:20,1] = substr(group[11:20,1],1,4)
 group[21:25,1] = paste(substr(group[21:25,1],1,7),substr(group[21:25,1],9,10),sep = '')
 group[26:30,1] = paste(substr(group[26:30,1],1,7),substr(group[26:30,1],9,11),sep = '')
-#group = group[1:20,]
 
 #组合
-expdata = data.frame(group[,1],data[match(rownames(group),rownames(data)),])
-colnames(expdata)[1] = 'group'
+exp = data.frame(group[,1],data[match(rownames(group),rownames(data)),])
+colnames(exp)[1] = 'group'
 
-expdata = expdata[,c('group','Ppargc1a')]
-#expdata = expdata[,1:2]
+expdata = exp[,c('group','Ppargc1a')]
 
-
-for (i in 1:10){
-  expdata[i,3] = i
-  expdata[i+10,3] = i
-}
-colnames(expdata)[3] = 'pair'
+#设置配对
+#for (i in 1:10){
+#  expdata[i,3] = i
+#  expdata[i+10,3] = i
+#}
+#colnames(expdata)[3] = 'pair'
 
 
 #使用 ggplot2 包绘制箱线图
@@ -83,9 +80,10 @@ my_compare = list(c('mv12h','mv6h'),c('mv6h','control6h'),c('mv12h','control12h'
 p2 = p + stat_compare_means(comparisons = my_compare,
                        label = 'p.signif',
                        method = 'wilcox.test')
+p2
 
 #ggsave(p,filename = "paired.pdf")
 
-pdf(file=paste(workdir,"/","Ppargc1a_compare.pdf",sep=""), width=12, height=10)
+pdf(file=paste(workdir,"/","Ppargc1a_batch_removed.pdf",sep=""), width=12, height=10)
 print(p2)
 dev.off()

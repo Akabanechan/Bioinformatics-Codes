@@ -33,3 +33,5 @@ data2 = data[,match(gene_symbols[,1],colnames(data))]
 colnames(data2) = gene_symbols[,2]
 
 data = data2
+
+write.csv(data, file = 'gene_trans_TPM.csv', quote=F, row.names = T)
